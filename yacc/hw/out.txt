@@ -1,0 +1,21 @@
+ A 3.44124123
+typedef struct _student
+{
+    int scoreKOR; } STUDENT;
+
+STUDENT[typedef] student[20];
+int main() {
+    STUDENT[typedef] sc;
+    enum Level myVar = MEDIUM;
+    return 0;
+}
+function = 1
+operation = 1
+int = 0
+char = 0
+pointer = 0
+array = 1
+selection = 0
+loop = 0
+return = 1
+debug___ = 1

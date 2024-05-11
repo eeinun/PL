@@ -138,8 +138,8 @@ L?\"(\\.|[^\\"])*\"	{ count(); return(STRING_LITERAL); }
 "=="			{ count(); return(EQ_OP); }
 "!="			{ count(); return(NE_OP); }
 ";"			{ count(); return(';'); }
-("{"|"<%")		{ count(); open_brace++; return('{'); }
-("}"|"%>")		{ count(); close_brace++; return('}'); }
+("{"|"<%")		{ count(); open_brace = 1; return('{'); }
+("}"|"%>")		{ count(); close_brace = 1; return('}'); }
 ","			{ count(); return(','); }
 ":"			{ count(); return(':'); }
 "="			{ count(); return('='); }

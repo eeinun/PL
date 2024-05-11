@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 char W[3] = "tf";
 char *answer;
 int main()

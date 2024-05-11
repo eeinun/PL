@@ -1,20 +1,3 @@
-%{
-    #include <stdio.h>
-    #define YYDEBUG 1
-    void yyerror(const char* str);
-    int yylex();
-    int function = 0;
-    int operation = 0;
-    int _int = 0;
-    int _char = 0;
-    int pointer = 0;
-    int array = 0;
-    int selection = 0;
-    int loop = 0;
-    int _return = 0;
-	int __init_dcl_counter = 0;
-	int debug___ = 0;
-%}
 %token IDENTIFIER CONSTANT STRING_LITERAL SIZEOF
 %token PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP LE_OP GE_OP EQ_OP NE_OP
 %token AND_OP OR_OP MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN ADD_ASSIGN
@@ -26,10 +9,6 @@
 %token STRUCT UNION ENUM ELLIPSIS
 
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
-
-%token INCLUDE_PP DEFINE_PP STDLIB
-%token	TYPEDEF_NAME ENUMERATION_CONSTANT
-
 
 %start translation_unit
 %%
@@ -44,12 +23,12 @@ primary_expression
 postfix_expression
 	: primary_expression
 	| postfix_expression '[' expression ']'
-	| postfix_expression '(' ')' { function++; }
-	| postfix_expression '(' argument_expression_list ')' { function++; }
-	| postfix_expression '.' IDENTIFIER { operation++; }
-	| postfix_expression PTR_OP IDENTIFIER { operation++; }
-	| postfix_expression INC_OP { operation++; }
-	| postfix_expression DEC_OP { operation++; }
+	| postfix_expression '(' ')'
+	| postfix_expression '(' argument_expression_list ')'
+	| postfix_expression '.' IDENTIFIER
+	| postfix_expression PTR_OP IDENTIFIER
+	| postfix_expression INC_OP
+	| postfix_expression DEC_OP
 	;
 
 argument_expression_list
@@ -59,8 +38,8 @@ argument_expression_list
 
 unary_expression
 	: postfix_expression
-	| INC_OP unary_expression { operation++; }
-	| DEC_OP unary_expression { operation++; }
+	| INC_OP unary_expression
+	| DEC_OP unary_expression
 	| unary_operator cast_expression
 	| SIZEOF unary_expression
 	| SIZEOF '(' type_name ')'
@@ -77,65 +56,65 @@ unary_operator
 
 cast_expression
 	: unary_expression
-	| '(' type_name ')' cast_expression  { operation++; }
+	| '(' type_name ')' cast_expression
 	;
 
 multiplicative_expression
 	: cast_expression
-	| multiplicative_expression '*' cast_expression { operation++; }
-	| multiplicative_expression '/' cast_expression { operation++; }
-	| multiplicative_expression '%' cast_expression { operation++; }
+	| multiplicative_expression '*' cast_expression
+	| multiplicative_expression '/' cast_expression
+	| multiplicative_expression '%' cast_expression
 	;
 
 additive_expression
 	: multiplicative_expression
-	| additive_expression '+' multiplicative_expression { operation++; }
-	| additive_expression '-' multiplicative_expression { operation++; }
+	| additive_expression '+' multiplicative_expression
+	| additive_expression '-' multiplicative_expression
 	;
 
 shift_expression
 	: additive_expression
-	| shift_expression LEFT_OP additive_expression { operation++; }
-	| shift_expression RIGHT_OP additive_expression { operation++; }
+	| shift_expression LEFT_OP additive_expression
+	| shift_expression RIGHT_OP additive_expression
 	;
 
 relational_expression
 	: shift_expression
-	| relational_expression '<' shift_expression { operation++; }
-	| relational_expression '>' shift_expression { operation++; }
-	| relational_expression LE_OP shift_expression { operation++; }
-	| relational_expression GE_OP shift_expression { operation++; }
+	| relational_expression '<' shift_expression
+	| relational_expression '>' shift_expression
+	| relational_expression LE_OP shift_expression
+	| relational_expression GE_OP shift_expression
 	;
 
 equality_expression
 	: relational_expression
-	| equality_expression EQ_OP relational_expression { operation++; }
-	| equality_expression NE_OP relational_expression { operation++; }
+	| equality_expression EQ_OP relational_expression
+	| equality_expression NE_OP relational_expression
 	;
 
 and_expression
 	: equality_expression
-	| and_expression '&' equality_expression { operation++; }
+	| and_expression '&' equality_expression
 	;
 
 exclusive_or_expression
 	: and_expression
-	| exclusive_or_expression '^' and_expression { operation++; }
+	| exclusive_or_expression '^' and_expression
 	;
 
 inclusive_or_expression
 	: exclusive_or_expression
-	| inclusive_or_expression '|' exclusive_or_expression { operation++; }
+	| inclusive_or_expression '|' exclusive_or_expression
 	;
 
 logical_and_expression
 	: inclusive_or_expression
-	| logical_and_expression AND_OP inclusive_or_expression { operation++; }
+	| logical_and_expression AND_OP inclusive_or_expression
 	;
 
 logical_or_expression
 	: logical_and_expression
-	| logical_or_expression OR_OP logical_and_expression { operation++; }
+	| logical_or_expression OR_OP logical_and_expression
 	;
 
 conditional_expression
@@ -145,7 +124,7 @@ conditional_expression
 
 assignment_expression
 	: conditional_expression
-	| unary_expression assignment_operator assignment_expression { operation++; }
+	| unary_expression assignment_operator assignment_expression
 	;
 
 assignment_operator
@@ -173,9 +152,7 @@ constant_expression
 
 declaration
 	: declaration_specifiers ';'
-	| declaration_specifiers init_declarator_list ';' { __init_dcl_counter = 0;}
-	| integer_declaration_specifiers init_declarator_list ';' { _int += __init_dcl_counter; __init_dcl_counter = 0;}
-	| character_declaration_specifiers init_declarator_list ';' { _char += __init_dcl_counter; __init_dcl_counter = 0;}
+	| declaration_specifiers init_declarator_list ';'
 	;
 
 declaration_specifiers
@@ -187,16 +164,14 @@ declaration_specifiers
 	| type_qualifier declaration_specifiers
 	;
 
-
-
 init_declarator_list
-	: init_declarator { __init_dcl_counter++; }
-	| init_declarator_list ',' init_declarator { __init_dcl_counter++; }
+	: init_declarator
+	| init_declarator_list ',' init_declarator
 	;
 
 init_declarator
 	: declarator
-	| declarator '=' initializer { operation++; }
+	| declarator '=' initializer
 	;
 
 storage_class_specifier
@@ -209,7 +184,9 @@ storage_class_specifier
 
 type_specifier
 	: VOID
+	| CHAR
 	| SHORT
+	| INT
 	| LONG
 	| FLOAT
 	| DOUBLE
@@ -218,27 +195,6 @@ type_specifier
 	| struct_or_union_specifier
 	| enum_specifier
 	| TYPE_NAME
-	| TYPEDEF_NAME
-	;
-
-integer_type_specifier
-	: INT
-	;
-
-character_type_specifier
-	: CHAR
-	;
-
-integer_declaration_specifiers
-	: storage_class_specifier integer_declaration_specifiers
-	| type_specifier integer_declaration_specifiers
-	| integer_type_specifier
-	;
-
-character_declaration_specifiers
-	: storage_class_specifier character_declaration_specifiers
-	| type_specifier character_declaration_specifiers
-	| character_type_specifier
 	;
 
 struct_or_union_specifier
@@ -258,17 +214,12 @@ struct_declaration_list
 	;
 
 struct_declaration
-	: specifier_qualifier_list ';'
-	| specifier_qualifier_list struct_declarator_list ';'
+	: specifier_qualifier_list struct_declarator_list ';'
 	;
 
 specifier_qualifier_list
 	: type_specifier specifier_qualifier_list
 	| type_specifier
-	| integer_type_specifier specifier_qualifier_list
-	| integer_type_specifier
-	| character_type_specifier specifier_qualifier_list
-	| character_type_specifier
 	| type_qualifier specifier_qualifier_list
 	| type_qualifier
 	;
@@ -306,24 +257,18 @@ type_qualifier
 	;
 
 declarator
-	: pointer direct_declarator { pointer++; }
+	: pointer direct_declarator
 	| direct_declarator
-	| direct_array_declarator { array++; }
 	;
 
 direct_declarator
 	: IDENTIFIER
 	| '(' declarator ')'
+	| direct_declarator '[' constant_expression ']'
+	| direct_declarator '[' ']'
 	| direct_declarator '(' parameter_type_list ')'
 	| direct_declarator '(' identifier_list ')'
 	| direct_declarator '(' ')'
-	;
-
-direct_array_declarator
-	: IDENTIFIER '[' constant_expression ']'
-	| IDENTIFIER '[' ']'
-	| direct_array_declarator '[' constant_expression ']'
-	| direct_array_declarator '[' ']'
 	;
 
 pointer
@@ -351,8 +296,6 @@ parameter_list
 
 parameter_declaration
 	: declaration_specifiers declarator
-	| integer_declaration_specifiers declarator { _int++; }
-	| character_declaration_specifiers declarator { _char++; }
 	| declaration_specifiers abstract_declarator
 	| declaration_specifiers
 	;
@@ -368,9 +311,9 @@ type_name
 	;
 
 abstract_declarator
-	: pointer { pointer++; }
+	: pointer
 	| direct_abstract_declarator
-	| pointer direct_abstract_declarator { pointer++; }
+	| pointer direct_abstract_declarator
 	;
 
 direct_abstract_declarator
@@ -400,8 +343,8 @@ statement
 	: labeled_statement
 	| compound_statement
 	| expression_statement
-	| selection_statement { selection++; }
-	| iteration_statement { loop++; }
+	| selection_statement
+	| iteration_statement
 	| jump_statement
 	;
 
@@ -413,22 +356,19 @@ labeled_statement
 
 compound_statement
 	: '{' '}'
-	| '{' list_of_list '}'
-	;
-
-list_of_list
-	: code_block_list
-	| list_of_list code_block_list
-	;
-
-code_block_list
-	: declaration
-	| statement
+	| '{' statement_list '}'
+	| '{' declaration_list '}'
+	| '{' declaration_list statement_list '}'
 	;
 
 declaration_list
 	: declaration
 	| declaration_list declaration
+	;
+
+statement_list
+	: statement
+	| statement_list statement
 	;
 
 expression_statement
@@ -438,6 +378,7 @@ expression_statement
 
 selection_statement
 	: IF '(' expression ')' statement
+	| IF '(' expression ')' statement ELSE statement
 	| SWITCH '(' expression ')' statement
 	;
 
@@ -446,16 +387,14 @@ iteration_statement
 	| DO statement WHILE '(' expression ')' ';'
 	| FOR '(' expression_statement expression_statement ')' statement
 	| FOR '(' expression_statement expression_statement expression ')' statement
-	| FOR '(' declaration expression_statement ')' statement
-	| FOR '(' declaration expression_statement expression ')' statement
 	;
 
 jump_statement
 	: GOTO IDENTIFIER ';'
 	| CONTINUE ';'
 	| BREAK ';'
-	| RETURN ';' { _return++; }
-	| RETURN expression ';' { _return++; }
+	| RETURN ';'
+	| RETURN expression ';'
 	;
 
 translation_unit
@@ -463,32 +402,14 @@ translation_unit
 	| translation_unit external_declaration
 	;
 
-preprocessor_declaration
-    : include_preprocessor
-    | define_preprocessor
-    ;
-
-include_preprocessor
-    : INCLUDE_PP STRING_LITERAL
-    | INCLUDE_PP STDLIB
-    ;
-
-define_preprocessor
-    : DEFINE_PP IDENTIFIER CONSTANT
-
 external_declaration
-	: function_definition { function++; }
-	| preprocessor_declaration { debug___++;}
+	: function_definition
 	| declaration
 	;
 
 function_definition
 	: declaration_specifiers declarator declaration_list compound_statement
 	| declaration_specifiers declarator compound_statement
-	| integer_declaration_specifiers declarator declaration_list compound_statement
-	| integer_declaration_specifiers declarator compound_statement
-	| character_declaration_specifiers declarator declaration_list compound_statement
-	| character_declaration_specifiers declarator compound_statement
 	| declarator declaration_list compound_statement
 	| declarator compound_statement
 	;
@@ -499,25 +420,8 @@ function_definition
 extern char yytext[];
 extern int column;
 
-int main(void) {
-	yydebug = 1;
-    yyparse();
-    
-    printf("\nfunction = %d\n", function);
-    printf("operation = %d\n", operation);
-    printf("int = %d\n", _int);
-    printf("char = %d\n", _char);
-    printf("pointer = %d\n", pointer);
-    printf("array = %d\n", array);
-    printf("selection = %d\n", selection);
-    printf("loop = %d\n", loop);
-    printf("return = %d\n", _return);
-    printf("debug___ = %d\n", debug___);
-
-    return 0;
-}
-
-void yyerror(const char *s)
+yyerror(s)
+char *s;
 {
 	fflush(stdout);
 	printf("\n%*s\n%*s\n", column, "^", column, s);

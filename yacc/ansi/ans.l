@@ -7,61 +7,13 @@ IS			(u|U|l|L)*
 
 %{
 #include <stdio.h>
-#include <string.h>
 #include "y.tab.h"
 
-typedef struct Node {
-    char data[64];
-    struct Node* next;
-} Node;
-
-void push(Node** root_ref, const char* new_data) {
-    Node* new_node = (Node*)malloc(sizeof(Node));
-
-    strncpy(new_node->data, new_data, 63);
-	new_node->data[64] = '\0';
-    new_node->next = (*root_ref); 
-    (*root_ref) = new_node;
-}
-
-int search(Node* root, const char* key) {
-    Node* now = root;
-    while (now) {
-		int i = 0;
-        if (strcmp(now->data, key) == 0)
-            return 1;
-        now = now->next;
-    }
-    return 0;
-}
-
-void deleteL(Node** root_ref) {
-    Node* current = *root_ref;
-    Node* next;
-
-    while (current != NULL) {
-        next = current->next;
-        free(current);
-        current = next;
-    }
-
-    *root_ref = NULL;
-}
-
-int open_brace = 0;
-int close_brace = 0;
-int pending_typename = 0;
-
 void count();
-void yyerror();
-
-void comment(void);
-int check_type(void);
 %}
 
 %%
 "/*"			{ comment(); }
-"//"[^\n]*\n	{ /*single line comment*/ }
 
 "auto"			{ count(); return(AUTO); }
 "break"			{ count(); return(BREAK); }
@@ -89,13 +41,7 @@ int check_type(void);
 "static"		{ count(); return(STATIC); }
 "struct"		{ count(); return(STRUCT); }
 "switch"		{ count(); return(SWITCH); }
-"typedef"		{ 
-	count();
-	pending_typename = 1;
-	open_brace = 0;
-	close_brace = 0;
-	return(TYPEDEF);
-}
+"typedef"		{ count(); return(TYPEDEF); }
 "union"			{ count(); return(UNION); }
 "unsigned"		{ count(); return(UNSIGNED); }
 "void"			{ count(); return(VOID); }
@@ -138,8 +84,8 @@ L?\"(\\.|[^\\"])*\"	{ count(); return(STRING_LITERAL); }
 "=="			{ count(); return(EQ_OP); }
 "!="			{ count(); return(NE_OP); }
 ";"			{ count(); return(';'); }
-("{"|"<%")		{ count(); open_brace++; return('{'); }
-("}"|"%>")		{ count(); close_brace++; return('}'); }
+("{"|"<%")		{ count(); return('{'); }
+("}"|"%>")		{ count(); return('}'); }
 ","			{ count(); return(','); }
 ":"			{ count(); return(':'); }
 "="			{ count(); return('='); }
@@ -162,23 +108,18 @@ L?\"(\\.|[^\\"])*\"	{ count(); return(STRING_LITERAL); }
 "|"			{ count(); return('|'); }
 "?"			{ count(); return('?'); }
 
-"#include"			{ return INCLUDE_PP; }
-"#define"			{ return DEFINE_PP; }
-\<[^\>]*\>\n			{ return STDLIB; }
-
 [ \t\v\n\f]		{ count(); }
 .			{ /* ignore bad characters */ }
 
 %%
-Node* root = NULL;
 
-int yywrap()
+yywrap()
 {
 	return(1);
 }
 
 
-void comment()
+comment()
 {
 	char c, c1;
 
@@ -217,17 +158,18 @@ void count()
 
 int check_type()
 {
-	if (search(root, yytext))
-	{
-		printf("[typedef]");		/* for debugging */
-		return TYPEDEF_NAME;		/* for TYPEDEF use */
-	}
-	if ((open_brace == 1 && close_brace == 1) && pending_typename == 1)
-	{
-		pending_typename = 0;
-		open_brace = 0;
-		close_brace = 0;
-		push(&root, yytext);
-	}
-	return IDENTIFIER;
+/*
+* pseudo code --- this is what it should check
+*
+*	if (yytext == type_name)
+*		return(TYPE_NAME);
+*
+*	return(IDENTIFIER);
+*/
+
+/*
+*	it actually will only return IDENTIFIER
+*/
+
+	return(IDENTIFIER);
 }
